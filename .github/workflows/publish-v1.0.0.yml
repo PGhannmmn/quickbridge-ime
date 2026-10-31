@@ -1,0 +1,51 @@
+# One-time public release automation for the verified v1.0.0 baseline.
+# This workflow never installs software on contributor machines.
+name: Publish v1.0.0
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-v1.0.0.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.repository == 'PGhannmmn/quickbridge-ime'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_COMMIT: a3ded0a2a6c40d9cd5e515a09c8d0401855ca294
+    steps:
+      - name: Verify release baseline
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${TARGET_COMMIT}" --jq .sha)"
+          test "$actual" = "$TARGET_COMMIT"
+      - name: Publish public source release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.0 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v1.0.0 already exists; refusing to overwrite."
+            exit 0
+          fi
+          cat > release-notes.md <<'EOF'
+          First public release of **速橋 QuickBridge IME**, a traditional Chinese Quick (速成) input method for Rime Weasel on Windows.
+
+          - Retains top-row 1–9 Quick candidate selection and NumPad digits as literal numbers.
+          - Supports Left Shift tap to confirm English, in-line English/numbers, and Shift+number Chinese next-character suggestions.
+          - Includes a separate `quickbridge` schema, documented setup and safe installer, Lua behavioral tests, and source-integrity checks.
+          - CI tests passed on the verified source commit.
+
+          **Installation:** This is a source-code release, **not** a standalone Windows executable. Install Rime Weasel separately, then follow [README.md](https://github.com/PGhannmmn/quickbridge-ime#readme). Existing v2.9 users should follow the no-reinstall promotion procedure in the README.
+
+          **Data notice:** Historical OpenVanilla prediction data are downloaded and verified by the installer; no private user dictionaries or typing history are included. This is an independent open-source project, not a Microsoft IME export.
+          EOF
+          gh release create v1.0.0 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_COMMIT" \
+            --title "QuickBridge IME v1.0.0" \
+            --notes-file release-notes.md \
+            --latest
+          echo "Published v1.0.0 at target commit $TARGET_COMMIT"
