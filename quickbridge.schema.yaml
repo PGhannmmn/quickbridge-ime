@@ -1,0 +1,88 @@
+# QuickBridge v1.0.0 public release; derived from the Windows-verified v2.9 lab.
+# Independent schema; no changes to Microsoft IME or other Rime schemes.
+schema:
+  schema_id: quickbridge
+  name: 速橋 QuickBridge
+  version: "1.0.0"
+  description: 原版速成字位＋英文行內組字及中文候選；OpenVanilla歷史聯想排序；非微軟官方Win11匯出
+switches:
+  - name: ascii_mode
+    reset: 0
+    states: [中文, 西文]
+  - name: prediction
+    states: [關閉聯想, 開啓聯想]
+    reset: 1
+  - name: full_shape
+    states: [半形, 全形]
+  - name: simplification
+    states: [漢字, 汉字]
+engine:
+  processors:
+    - lua_processor@*quickbridge_processor_v29
+    - lua_processor@*quickbridge_prediction_guard_v21
+    - ascii_composer
+    - recognizer
+    - predictor
+    - key_binder
+    - speller
+    - selector
+    - navigator
+    - express_editor
+  segmentors:
+    - ascii_segmentor
+    - matcher
+    - abc_segmentor
+    - punct_segmentor
+    - fallback_segmentor
+  translators:
+    - predict_translator
+    - punct_translator
+    - table_translator
+    - reverse_lookup_translator
+  filters:
+    - lua_filter@*quickbridge_openvanilla_filter_v21
+    - simplifier
+speller:
+  delimiter: " ;"
+  alphabet: abcdefghijklmnopqrstuvwxyz
+  max_code_length: 64
+  auto_select: false
+  auto_clear: manual
+predictor:
+  db: qb_predict_zht_lab.db
+  max_candidates: 9
+  max_iterations: 1
+translator:
+  dictionary: qb_quick
+  enable_completion: false
+  enable_user_dict: false
+  enable_sentence: false
+  # Do NOT transform Latin preedit to Cangjie radicals: show raw English inline.
+  comment_format:
+    - "xlit|abcdefghijklmnopqrstuvwxyz|日月金木水火土竹戈十大中一弓人心手口尸廿山女田難卜符|"
+reverse_lookup:
+  dictionary: luna_pinyin
+  prefix: "`"
+  tips: 〔拼音〕
+key_binder:
+  import_preset: default
+  bindings:
+    - { when: has_menu, accept: space, send: Page_Down }
+menu:
+  page_size: 9
+simplifier:
+  tips: all
+recognizer:
+  import_preset: default
+  patterns:
+    reverse_lookup: "`[a-z]*$"
+ascii_composer:
+  switch_key:
+    Shift_L: noop
+    Shift_R: noop
+
+# Schema-scoped display preference: the original ms_quick remains untouched.
+# Weasel frontend must support schema-specific style override.
+style:
+  inline_preedit: true
+  preedit_type: composition

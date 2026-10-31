@@ -1,0 +1,16 @@
+# Generated Rime binaries and private user data
+*.table.bin
+*.prism.bin
+*.reverse.bin
+*.userdb/
+*.log
+*.db
+user.yaml
+build/
+.cache/
+__pycache__/
+*.pyc
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
