@@ -33,16 +33,16 @@ local ASCII_PUNCT = {
   [95]='_', [96]='`', [123]='{', [124]='|', [125]='}', [126]='~'
 }
 
--- Frontends differ on shifted US punctuation: the keysym may already be
--- '<', '>', '?' or it may be the unshifted base code with Shift set.
--- Only these three keys are special-cased for the reported short-Latin bug.
-local SHIFTED_SHORT_PUNCT = {[44]='<', [46]='>', [47]='?'}
-local SINGLE_LATIN_PUNCT = {
-  [44]=true, [46]=true, [47]=true, [60]=true, [62]=true, [63]=true
+-- On physical US-layout punctuation keys, some Weasel frontends send
+-- the shifted symbol itself; others send the unshifted keycode + Shift.
+-- Map both representations consistently. This does NOT cover non-US layouts.
+local SHIFTED_PUNCT_FROM_BASE = {
+  [39]='"', [44]='<', [45]='_', [46]='>', [47]='?',
+  [59]=':', [61]='+', [91]='{', [92]='|', [93]='}', [96]='~'
 }
 local function keyboard_boundary(key, code)
-  if key:shift() and SHIFTED_SHORT_PUNCT[code] then
-    return SHIFTED_SHORT_PUNCT[code]
+  if key:shift() and SHIFTED_PUNCT_FROM_BASE[code] then
+    return SHIFTED_PUNCT_FROM_BASE[code]
   end
   return ASCII_PUNCT[code]
 end
@@ -322,12 +322,14 @@ function M.func(key, env)
     return commit_raw(env, ctx, input .. (kp_char or '+'))
   end
 
-  -- A single typed Latin letter followed by the main keyboard comma/period/
-  -- slash (including Shift < > ?) is an English punctuation boundary. Without
-  -- this, native Rime may commit the Chinese candidate (a -> 日) or swallow
-  -- the key. Two-letter lowercase Quick codes (vd, / of.) stay native.
-  -- To write a one-code Chinese character, select it with Space/1..9 first.
-  if is_alpha and #input == 1 and SINGLE_LATIN_PUNCT[code] and boundary then
+  -- A single Latin letter followed by physical main-keyboard punctuation
+  -- commits literal English, instead of triggering a Chinese candidate.
+  -- Reserve Shift+top-row 1..9 (including already-shifted keysyms) for the
+  -- existing Chinese shortcuts; preserve two-code lowercase Quick rules.
+  -- Select a one-code Chinese character using Space / 1..9 FIRST.
+  local shifted_selector = key:shift() and
+      (SHIFT_DIGIT_SYMBOLS[code] or (code >= 49 and code <= 57))
+  if is_alpha and #input == 1 and boundary and not shifted_selector then
     return commit_raw(env, ctx, input .. boundary)
   end
 
