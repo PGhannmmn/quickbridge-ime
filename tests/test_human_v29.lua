@@ -99,11 +99,30 @@ case('ALL 26 single Latin codes × top 1..9 remain native Chinese selection',fun
   end
  end end
 end)
-case('One-letter native comma/period remains Chinese punctuation path',function()
- for _,ch in ipairs({'h','f','a','o'}) do
-  for _,sym in ipairs({',','.'}) do
+case('All one-letter Latin + keyboard comma/period/slash commit literal English',function()
+ for k=97,122 do
+  local ch=string.char(k)
+  for _,sym in ipairs({',','.','/'}) do
    local q=make();q.typeword(ch)
-   eq(q.send(sym),2);eq(q.value(),'');eq(q.ctx.input,ch)
+   eq(q.send(sym),1);eq(q.value(),ch..sym);eq(q.ctx.input,'')
+  end
+ end
+end)
+case('Shifted comma/period/slash after one letter produce < > ? with either keysym',function()
+ for _,pair in ipairs({{',','<'},{'.','>'},{'/','?'}}) do
+  for _,ch in ipairs({'a','f','h','z'}) do
+   for _,keycode in ipairs({pair[1],pair[2]}) do
+    local q=make();q.typeword(ch)
+    eq(q.send(keycode,{shift=true}),1);eq(q.value(),ch..pair[2]);eq(q.ctx.input,'')
+   end
+  end
+ end
+end)
+case('One-letter Latin + Shift+main-number-row selector stays native',function()
+ for _,ch in ipairs({'a','f','h'}) do
+  for _,sym in ipairs({33,49,64,50,35,51,36,52}) do
+   local q=make();q.typeword(ch)
+   eq(q.send(sym,{shift=true}),2);eq(q.value(),'');eq(q.ctx.input,ch)
   end
  end
 end)

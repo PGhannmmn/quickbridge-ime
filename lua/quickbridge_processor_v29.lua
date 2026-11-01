@@ -33,6 +33,20 @@ local ASCII_PUNCT = {
   [95]='_', [96]='`', [123]='{', [124]='|', [125]='}', [126]='~'
 }
 
+-- On physical US-layout punctuation keys, some Weasel frontends send
+-- the shifted symbol itself; others send the unshifted keycode + Shift.
+-- Map both representations consistently. This does NOT cover non-US layouts.
+local SHIFTED_PUNCT_FROM_BASE = {
+  [39]='"', [44]='<', [45]='_', [46]='>', [47]='?',
+  [59]=':', [61]='+', [91]='{', [92]='|', [93]='}', [96]='~'
+}
+local function keyboard_boundary(key, code)
+  if key:shift() and SHIFTED_PUNCT_FROM_BASE[code] then
+    return SHIFTED_PUNCT_FROM_BASE[code]
+  end
+  return ASCII_PUNCT[code]
+end
+
 -- NumPad has its own X11/Rime keysyms, not ASCII 0..9 or + - * / .
 -- NumLock OFF produces navigation keysyms; never convert those into numbers.
 -- Prefer the specific keypad codes so main-row 1..9 remain Quick selections.
@@ -185,7 +199,7 @@ function M.func(key, env)
   local code, input = key.keycode, ctx.input or ''
   local is_alpha = letters(input)
   local native_menu = is_alpha and #input <= 2 and ctx:has_menu()
-  local boundary = ASCII_PUNCT[code]
+  local boundary = keyboard_boundary(key, code)
   local kp_char, kp_is_digit = keypad_key(key)
   local kp_is_symbol = kp_char ~= nil and not kp_is_digit
   -- KEYBOARD POLICY: main-row digits normally select Quick characters;
@@ -303,10 +317,20 @@ function M.func(key, env)
   end
 
   -- NumPad operators (and an explicit main-keyboard +) are Latin boundaries
-  -- even after ONE letter. Main keyboard comma/period remain native for
-  -- one/two-letter Quick: vd, must retain Chinese punctuation behavior.
+  -- even after ONE letter; the physical top-row 1..9 remain Chinese selectors.
   if is_alpha and (kp_is_symbol or code == 43) then
     return commit_raw(env, ctx, input .. (kp_char or '+'))
+  end
+
+  -- A single Latin letter followed by physical main-keyboard punctuation
+  -- commits literal English, instead of triggering a Chinese candidate.
+  -- Reserve Shift+top-row 1..9 (including already-shifted keysyms) for the
+  -- existing Chinese shortcuts; preserve two-code lowercase Quick rules.
+  -- Select a one-code Chinese character using Space / 1..9 FIRST.
+  local shifted_selector = key:shift() and
+      (SHIFT_DIGIT_SYMBOLS[code] or (code >= 49 and code <= 57))
+  if is_alpha and #input == 1 and boundary and not shifted_selector then
+    return commit_raw(env, ctx, input .. boundary)
   end
 
   -- Main-row digits 1..9 after short lowercase Quick retain native Chinese
@@ -336,6 +360,9 @@ function M.func(key, env)
     return commit_raw(env, ctx, input)
   end
   if code == X_TAB and is_alpha then
+    -- Shift+Tab is the application's reverse-focus/navigation shortcut.
+    -- Never commit Latin plus a space on this modified Tab press.
+    if key:shift() then return NOOP end
     return commit_raw(env, ctx, input .. ' ')
   end
 

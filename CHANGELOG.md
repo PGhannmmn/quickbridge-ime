@@ -1,5 +1,12 @@
 # Changelog
 
+## v1.0.1 — 2026-11-01
+
+- Fix one-letter English followed by physical main-keyboard punctuation, including `a,`, `a.`, `a/`, `a;` and US-layout shifted variants such as `a>`.
+- Preserve Chinese selection using Space or top-row 1–9, two-code lowercase Quick rules and Shift+number predictive selection. One-code Chinese should be selected before punctuation.
+- Preserve application Shift+Tab navigation instead of appending an unintended space to pending English in the processor.
+- Windows preview accepted 8 targeted checks (six punctuation / English / Chinese outputs plus `你們` from normal Quick and prediction). GitHub CI includes Lua mocked-Rime regression tests. Other keyboards, applications and Windows event paths are not exhaustively verified.
+
 ## v1.0.0 — 2026-10-31
 
 First public baseline, released from the Windows-accepted **QuickBridge v2.9** experimental build.

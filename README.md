@@ -1,6 +1,6 @@
 # 速橋 QuickBridge IME
 
-**v1.0.0** · Windows 11 · [Rime 小狼毫 / Weasel](https://github.com/rime/weasel) · Free and open source
+**v1.0.1** · Windows 11 · [Rime 小狼毫 / Weasel](https://github.com/rime/weasel) · Free and open source
 
 A compact Traditional Chinese **Quick (速成)** input method with no-mode-switch English typing, NumPad digits, and Chinese next-character suggestions. Based on a Windows-validated v2.9 personal prototype, re-released as the **first public release v1.0.0**.
 
@@ -15,6 +15,13 @@ A compact Traditional Chinese **Quick (速成)** input method with no-mode-switc
 - **Shift + top-row 1–9** to select next-character suggestions; Space pages association suggestions.
 - Punctuation after Chinese cancels the association menu, rather than accidentally picking another Chinese character.
 - The base Quick code table is derived from Kho's MIT-licensed Rime dictionary. Historical association data contain **44,572 entries / 4,017 leading characters**, downloaded separately on installation.
+
+## What's new in v1.0.1
+
+- After a single Latin letter, main-keyboard punctuation now commits literal English (`a,`, `a.`, `a/`, `a;`, and US-layout Shift variants such as `a>`).
+- One-code Chinese characters must be selected **before** punctuation (for example, `f` + Space → `火`); two-code Quick candidate selection remains native.
+- Shift+Tab with pending English no longer commits an unwanted trailing space in the processor. Windows focus behavior may still vary by application.
+- Existing v1.0.0 users can retain their existing setup until they deliberately upgrade. No input-method or Windows configuration is changed by a GitHub release.
 
 ## Already using QuickBridge v2.9 on Windows? (No reinstall)
 
@@ -63,8 +70,8 @@ The top-row number keys and the numeric keypad intentionally behave differently.
 
 ## Versioning and testing
 
-- **Current public release**: `v1.0.0`, frozen from the Windows-accepted v2.9 lab. Internal Lua filenames still contain historical module suffixes, but the public schema and release use **1.0.0**.
-- Personal Windows acceptance covered `h1h` (NumPad + left-Shift sequence), `hi+`, `hello123`, and `你們`. Other scenarios were tested in Lua 5.4 with mocked Rime context. These tests **do not prove every Windows app or keyboard layout works**.
+- **Current public release**: `v1.0.1`, based on the Windows-accepted v2.9 / v1.0.0 baseline. Internal Lua filenames retain historical module suffixes and do not indicate public version.
+- Personal Windows acceptance covered baseline `h1h`, `hi+`, `hello123`, `你們`, and targeted v1.0.1 preview results `a.`, `a/`, `a;`, `a>`, `of` (left Shift), `火` (Space), and `你們` (Quick + prediction). Other scenarios were tested in Lua 5.4 with mocked Rime context. These tests **do not prove every Windows app or keyboard layout works**.
 - The source ships Lua simulation tests in `tests/`. Run with Lua 5.4 when available. For future CI, see [CONTRIBUTING.md](CONTRIBUTING.md).
 - Windows may deliver modifier release events differently in Remote Desktop, custom keyboard layouts, or other IME clients. Left Shift behavior may vary.
 

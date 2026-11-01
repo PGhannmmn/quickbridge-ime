@@ -3,7 +3,7 @@
 schema:
   schema_id: quickbridge
   name: 速橋 QuickBridge
-  version: "1.0.0"
+  version: "1.0.1"
   description: 原版速成字位＋英文行內組字及中文候選；OpenVanilla歷史聯想排序；非微軟官方Win11匯出
 switches:
   - name: ascii_mode
