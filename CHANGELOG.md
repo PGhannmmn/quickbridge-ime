@@ -1,10 +1,11 @@
 # Changelog
 
-## Unreleased — proposed v1.0.1 bug fix
+## v1.0.1 — 2026-11-01
 
-- Fix one-letter English followed by physical main-keyboard comma, period or slash (`a,`, `a.`, `a/`), including shifted `<`, `>`, `?` with either keysym representation.
-- Preserve one-letter Chinese selection via Space or number row, two-letter lowercase Quick punctuation behavior, and shifted numeric candidate shortcuts.
-- Mocked Rime regression tests added; Windows/Weasel validation still pending.
+- Fix one-letter English followed by physical main-keyboard punctuation, including `a,`, `a.`, `a/`, `a;` and US-layout shifted variants such as `a>`.
+- Preserve Chinese selection using Space or top-row 1–9, two-code lowercase Quick rules and Shift+number predictive selection. One-code Chinese should be selected before punctuation.
+- Preserve application Shift+Tab navigation instead of appending an unintended space to pending English in the processor.
+- Windows preview accepted 8 targeted checks (six punctuation / English / Chinese outputs plus `你們` from normal Quick and prediction). GitHub CI includes Lua mocked-Rime regression tests. Other keyboards, applications and Windows event paths are not exhaustively verified.
 
 ## v1.0.0 — 2026-10-31
 
