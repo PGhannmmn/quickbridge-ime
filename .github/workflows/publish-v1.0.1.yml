@@ -1,0 +1,58 @@
+# One-time source release for the Windows-validated v1.0.1 punctuation fix.
+name: Publish v1.0.1
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-v1.0.1.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.repository == 'PGhannmmn/quickbridge-ime'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_COMMIT: c74563c25d133327ef8fded308388d6286c71be6
+    steps:
+      - name: Verify pinned merge commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${TARGET_COMMIT}" --jq .sha)"
+          test "$actual" = "$TARGET_COMMIT"
+      - name: Create v1.0.1 source release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.1 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v1.0.1 already exists; refusing to overwrite."
+            exit 0
+          fi
+          cat > release-notes.md <<'EOF'
+          ## What's fixed
+
+          - Single-letter English followed by keyboard punctuation now commits literal text: `a,`, `a.`, `a/`, `a;`, and supported US-layout Shift combinations (such as `a>`).
+          - Shift+Tab with pending English no longer inserts a trailing space in QuickBridge's processor.
+          - Original Quick Chinese number-row candidate selection, next-character Shift+number prediction, NumPad typing, and Left Shift confirmation are preserved.
+
+          ## Validation
+
+          - **Windows acceptance:** eight targeted checks passed, including `a.`, `a/`, `a;`, `a>`, Left Shift `of`, `f` + Space → `火`, and Quick/association `你們`.
+          - Lua mocked-Rime tests and source-integrity checks passed on the merged code. Compatibility in all Windows applications and keyboard layouts is not guaranteed.
+
+          ## Installation and upgrade
+
+          This is a **source-code release for Rime Weasel**, not a standalone Windows installer. New users should install Weasel and follow the [README](https://github.com/PGhannmmn/quickbridge-ime#readme).
+
+          GitHub does not modify any installed input method. The full installer intentionally refuses to overwrite existing different Lua files: users already on v1.0.0 or the v2.9 lab should make a backup and follow an explicitly reviewed upgrade path, not rerun the initial installer to force replacement.
+
+          Independent open-source project; no Microsoft Windows 11 IME export or personal typing history is included.
+          EOF
+          gh release create v1.0.1 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_COMMIT" \
+            --title "QuickBridge IME v1.0.1 — punctuation fix" \
+            --notes-file release-notes.md \
+            --latest
+          echo "Published v1.0.1 at $TARGET_COMMIT"
