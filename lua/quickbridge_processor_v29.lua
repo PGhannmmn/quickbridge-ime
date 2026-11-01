@@ -33,6 +33,20 @@ local ASCII_PUNCT = {
   [95]='_', [96]='`', [123]='{', [124]='|', [125]='}', [126]='~'
 }
 
+-- Frontends differ on shifted US punctuation: the keysym may already be
+-- '<', '>', '?' or it may be the unshifted base code with Shift set.
+-- Only these three keys are special-cased for the reported short-Latin bug.
+local SHIFTED_SHORT_PUNCT = {[44]='<', [46]='>', [47]='?'}
+local SINGLE_LATIN_PUNCT = {
+  [44]=true, [46]=true, [47]=true, [60]=true, [62]=true, [63]=true
+}
+local function keyboard_boundary(key, code)
+  if key:shift() and SHIFTED_SHORT_PUNCT[code] then
+    return SHIFTED_SHORT_PUNCT[code]
+  end
+  return ASCII_PUNCT[code]
+end
+
 -- NumPad has its own X11/Rime keysyms, not ASCII 0..9 or + - * / .
 -- NumLock OFF produces navigation keysyms; never convert those into numbers.
 -- Prefer the specific keypad codes so main-row 1..9 remain Quick selections.
@@ -185,7 +199,7 @@ function M.func(key, env)
   local code, input = key.keycode, ctx.input or ''
   local is_alpha = letters(input)
   local native_menu = is_alpha and #input <= 2 and ctx:has_menu()
-  local boundary = ASCII_PUNCT[code]
+  local boundary = keyboard_boundary(key, code)
   local kp_char, kp_is_digit = keypad_key(key)
   local kp_is_symbol = kp_char ~= nil and not kp_is_digit
   -- KEYBOARD POLICY: main-row digits normally select Quick characters;
@@ -303,10 +317,18 @@ function M.func(key, env)
   end
 
   -- NumPad operators (and an explicit main-keyboard +) are Latin boundaries
-  -- even after ONE letter. Main keyboard comma/period remain native for
-  -- one/two-letter Quick: vd, must retain Chinese punctuation behavior.
+  -- even after ONE letter; the physical top-row 1..9 remain Chinese selectors.
   if is_alpha and (kp_is_symbol or code == 43) then
     return commit_raw(env, ctx, input .. (kp_char or '+'))
+  end
+
+  -- A single typed Latin letter followed by the main keyboard comma/period/
+  -- slash (including Shift < > ?) is an English punctuation boundary. Without
+  -- this, native Rime may commit the Chinese candidate (a -> 日) or swallow
+  -- the key. Two-letter lowercase Quick codes (vd, / of.) stay native.
+  -- To write a one-code Chinese character, select it with Space/1..9 first.
+  if is_alpha and #input == 1 and SINGLE_LATIN_PUNCT[code] and boundary then
+    return commit_raw(env, ctx, input .. boundary)
   end
 
   -- Main-row digits 1..9 after short lowercase Quick retain native Chinese

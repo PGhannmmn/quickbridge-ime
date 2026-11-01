@@ -1,5 +1,11 @@
 # Changelog
 
+## Unreleased — proposed v1.0.1 bug fix
+
+- Fix one-letter English followed by physical main-keyboard comma, period or slash (`a,`, `a.`, `a/`), including shifted `<`, `>`, `?` with either keysym representation.
+- Preserve one-letter Chinese selection via Space or number row, two-letter lowercase Quick punctuation behavior, and shifted numeric candidate shortcuts.
+- Mocked Rime regression tests added; Windows/Weasel validation still pending.
+
 ## v1.0.0 — 2026-10-31
 
 First public baseline, released from the Windows-accepted **QuickBridge v2.9** experimental build.
