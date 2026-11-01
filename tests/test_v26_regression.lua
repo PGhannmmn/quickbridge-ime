@@ -102,8 +102,8 @@ case('Modifier shortcuts do not interfere with native Rime',function()
  local e,c,o=start();pred(c,o,'你');for _,x in ipairs({'alt','ctrl','super','release'}) do eq(hit(e,',',{[x]=true}),2) end
  eq(c.predict,true);eq(committed(o),'你')
 end)
-case('Normal Chinese code punctuation not spuriously committed',function()
- local e,c,o=start();word(e,'f');eq(hit(e,','),2);eq(committed(o),'')
+case('Two-code Chinese Quick punctuation stays native',function()
+ local e,c,o=start();word(e,'vd');eq(hit(e,','),2);eq(committed(o),'');eq(c.input,'vd')
 end)
 
 case('After punctuation prediction is dismissed even if engine reopens it synchronously',function()
