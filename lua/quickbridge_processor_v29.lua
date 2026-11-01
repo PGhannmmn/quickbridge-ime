@@ -360,6 +360,9 @@ function M.func(key, env)
     return commit_raw(env, ctx, input)
   end
   if code == X_TAB and is_alpha then
+    -- Shift+Tab is the application's reverse-focus/navigation shortcut.
+    -- Never commit Latin plus a space on this modified Tab press.
+    if key:shift() then return NOOP end
     return commit_raw(env, ctx, input .. ' ')
   end
 

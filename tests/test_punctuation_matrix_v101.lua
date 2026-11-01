@@ -34,4 +34,20 @@ for _,pair in ipairs(symbols) do
  end
  run('hello',pair[1],true,'hello'..pair[2])
 end
+-- Shift+Tab while a Latin preedit is pending must NOT commit or insert space.
+do
+ local ctx={input='a',opts={ascii_mode=false,prediction=false}}
+ function ctx:get_option(k) return self.opts[k] end
+ function ctx:has_menu() return true end
+ function ctx:clear() self.input='' end
+ local out={};local env={engine={context=ctx}}
+ function env.engine:commit_text(s) out[#out+1]=s end
+ local e={keycode=0xff09}
+ function e:shift() return true end
+ function e:release() return false end
+ function e:ctrl() return false end
+ function e:alt() return false end
+ function e:super() return false end
+ eq(P.func(e,env),2);eq(ctx.input,'a');eq(#out,0)
+end
 print('US physical punctuation matrix:',checks,'assertions, mocked Rime')
