@@ -1,0 +1,56 @@
+# One-time source release from the Windows-tested v1.0.2 merge commit.
+name: Publish v1.0.2
+on:
+  push:
+    paths:
+      - '.github/workflows/publish-v1.0.2.yml'
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  publish:
+    if: github.repository == 'PGhannmmn/quickbridge-ime'
+    runs-on: ubuntu-latest
+    env:
+      GH_TOKEN: ${{ github.token }}
+      TARGET_COMMIT: 1279d2c556566b3e6971ce9fc4d0ace333f00a93
+    steps:
+      - name: Verify pinned source commit
+        shell: bash
+        run: |
+          set -euo pipefail
+          actual="$(gh api "repos/${GITHUB_REPOSITORY}/commits/${TARGET_COMMIT}" --jq .sha)"
+          test "$actual" = "$TARGET_COMMIT"
+      - name: Create v1.0.2 source release
+        shell: bash
+        run: |
+          set -euo pipefail
+          if gh release view v1.0.2 --repo "$GITHUB_REPOSITORY" >/dev/null 2>&1; then
+            echo "v1.0.2 already exists; refusing to overwrite."
+            exit 0
+          fi
+          cat > release-notes.md <<'EOF'
+          ## QuickBridge IME v1.0.2 — Two-letter English punctuation fix
+
+          ### What's fixed
+          - Two-letter lowercase English compositions such as `wo`, `of`, `hi`, or `vd` now commit literal physical punctuation, rather than falling through to native Chinese Quick punctuation handling.
+          - Repeated punctuation remains literal: `wo...`, `wo+...`, and `hello...`.
+          - Top-row 1–9 and Shift+number Chinese selections, NumPad, bare Left Shift, and Space paging are retained.
+
+          **Trade-off:** for one- or two-letter Chinese Quick codes, choose the Chinese character using the usual number row (or Space when applicable) **before** typing punctuation.
+
+          ### Validation
+          The user's Windows QA preview returned exact expected outputs for `wo...`, `wo+...`, `of,`, and `你們`. Lua mocked-Rime CI passed, including the extended two-letter punctuation matrix and source-integrity tests. Behavior in every Windows application and keyboard layout has not been proven.
+
+          ### Installation
+          This is a **source-code release** for Rime Weasel; it is not a standalone Windows executable. New users may follow the [README](https://github.com/PGhannmmn/quickbridge-ime#readme). Existing v1.0.1 / v2.9 installs should use an explicitly backed-up and verified upgrade process. The original installer deliberately refuses to overwrite different existing Lua files.
+
+          Publishing this GitHub release does not change any Windows installation, registry settings, or Microsoft input methods. Earlier v1.0.0 and v1.0.1 releases remain available.
+          EOF
+          gh release create v1.0.2 \
+            --repo "$GITHUB_REPOSITORY" \
+            --target "$TARGET_COMMIT" \
+            --title "QuickBridge IME v1.0.2 — two-letter punctuation fix" \
+            --notes-file release-notes.md \
+            --latest
+          echo "Published v1.0.2 at $TARGET_COMMIT"
