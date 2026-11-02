@@ -220,6 +220,21 @@ function M.func(key, env)
     end
   end
 
+  -- English punctuation directly after a Latin preedit needs a short
+  -- punctuation tail. Without it, 'wo...' commits 'wo.' but later dots go
+  -- back to native Chinese punctuation handling. The tail is intentionally
+  -- punctuation-only: the next Latin letter is a fresh Quick composition.
+  if env.qb_v102_latin_punct_tail then
+    env.qb_v102_latin_punct_tail = false
+    local comp_empty = not ctx.composition or ctx.composition:empty()
+    if input == '' and comp_empty and (boundary or kp_is_symbol) then
+      local symbol = kp_char or boundary
+      local result = commit_raw(env, ctx, symbol)
+      env.qb_v102_latin_punct_tail = true
+      return result
+    end
+  end
+
   -- Following a Latin word with a digit (hello1 / AI2), keep all subsequent
   -- digits/letters in an unambiguous ASCII stream. No delimiter required.
   -- This has started only after an explicit, safe English cue (3+ letters, or
@@ -319,18 +334,22 @@ function M.func(key, env)
   -- NumPad operators (and an explicit main-keyboard +) are Latin boundaries
   -- even after ONE letter; the physical top-row 1..9 remain Chinese selectors.
   if is_alpha and (kp_is_symbol or code == 43) then
-    return commit_raw(env, ctx, input .. (kp_char or '+'))
+    local result = commit_raw(env, ctx, input .. (kp_char or '+'))
+    env.qb_v102_latin_punct_tail = true
+    return result
   end
 
-  -- A single Latin letter followed by physical main-keyboard punctuation
-  -- commits literal English, instead of triggering a Chinese candidate.
-  -- Reserve Shift+top-row 1..9 (including already-shifted keysyms) for the
-  -- existing Chinese shortcuts; preserve two-code lowercase Quick rules.
-  -- Select a one-code Chinese character using Space / 1..9 FIRST.
+  -- One- and two-letter Latin preedit followed by physical punctuation
+  -- commits literal English. Previously two lowercase letters (wo, of, vd)
+  -- fell through to native Chinese punctuation and swallowed '.' and '/'.
+  -- Quick top-row candidate selection and Shift+number associations stay
+  -- native; select a Chinese word using a number / Space BEFORE punctuation.
   local shifted_selector = key:shift() and
       (SHIFT_DIGIT_SYMBOLS[code] or (code >= 49 and code <= 57))
-  if is_alpha and #input == 1 and boundary and not shifted_selector then
-    return commit_raw(env, ctx, input .. boundary)
+  if is_alpha and #input <= 2 and boundary and not shifted_selector then
+    local result = commit_raw(env, ctx, input .. boundary)
+    env.qb_v102_latin_punct_tail = true
+    return result
   end
 
   -- Main-row digits 1..9 after short lowercase Quick retain native Chinese
@@ -349,11 +368,13 @@ function M.func(key, env)
   -- of an exclam keysym. Only unambiguously English compositions capture it;
   -- a pending Quick code or association keeps the original Shift+digit path.
   local latin_punct = boundary or (key:shift() and SHIFTED_MAIN_DIGIT[code])
-  -- English punctuation after 3+ letters; or explicit uppercase-leading
-  -- short English (Hi,). Lowercase two-letter Quick codes (vd, / of,) stay
-  -- native, consistent with the v2.2 regression/selection semantics.
+  -- English punctuation after 3+ letters (also any short uppercase word).
+  -- A short lowercase composition is handled above while number-row Chinese
+  -- selectors remain native. Keep following ASCII punctuation literal too.
   if is_alpha and (#input > 2 or input:match('^[A-Z]')) and latin_punct then
-    return commit_raw(env, ctx, input .. latin_punct)
+    local result = commit_raw(env, ctx, input .. latin_punct)
+    env.qb_v102_latin_punct_tail = true
+    return result
   end
 
   if (code == X_RETURN or code == X_KP_ENTER) and is_alpha then
