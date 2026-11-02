@@ -16,6 +16,13 @@ A compact Traditional Chinese **Quick (速成)** input method with no-mode-switc
 - Punctuation after Chinese cancels the association menu, rather than accidentally picking another Chinese character.
 - The base Quick code table is derived from Kho's MIT-licensed Rime dictionary. Historical association data contain **44,572 entries / 4,017 leading characters**, downloaded separately on installation.
 
+## Unreleased v1.0.2 candidate — Windows QA pending
+
+- Fix **two-letter lowercase English + punctuation** (for example `wo.`, `of,`, `hi?`, `vd;`) without switching input modes.
+- Consecutive physical punctuation stays literal after an English boundary: `wo...`, `wo+...`, and `hello...` (not just the first dot). The next letter starts a fresh Quick code.
+- **Compatibility change:** After either one or two Latin letters, punctuation is treated as English. If you want Chinese, select the Chinese candidate with top-row 1–9 (or the existing Space behavior) **before** punctuation. Numeric selection and Shift+number Chinese prediction remain unchanged.
+- Windows real-world verification of this new candidate is still required. The current published release remains v1.0.1.
+
 ## What's new in v1.0.1
 
 - After a single Latin letter, main-keyboard punctuation now commits literal English (`a,`, `a.`, `a/`, `a;`, and US-layout Shift variants such as `a>`).
