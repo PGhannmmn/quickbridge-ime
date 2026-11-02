@@ -44,10 +44,15 @@ do
  local c,e,out,hit=fresh();eq(hit('f'),1);eq(hit(32),1)
  eq(table.concat(out),'火')
 end
--- Two-code Chinese Quick and shifted main numeric candidate selection preserved.
+-- Two-code punctuation commits raw English; shifted Chinese numeric
+-- candidate selection remains delegated to native Rime/guard.
 do
  local c,e,out,hit=fresh();eq(hit('v'),1);eq(hit('d'),1)
- eq(hit(','),2);eq(c.input,'vd');eq(table.concat(out),'')
+ eq(hit(','),1);eq(c.input,'');eq(table.concat(out),'vd,')
+end
+do
+ local c,e,out,hit=fresh();eq(hit('v'),1);eq(hit('d'),1)
+ eq(hit(49),2);eq(c.input,'vd');eq(table.concat(out),'')
 end
 do
  local c,e,out,hit=fresh();eq(hit('a'),1)
