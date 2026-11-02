@@ -1,11 +1,11 @@
 # Changelog
 
-## Unreleased — proposed v1.0.2
+## v1.0.2 — 2026-11-01
 
 - Treat physical punctuation after **two lowercase Latin characters** as explicit English input, not a native Chinese Quick punctuation event.
 - Preserve repeated literal punctuation (`wo...`, `wo+...`); return to regular Quick composition on the next letter.
 - Retain original Chinese number-row selection, Shift+number associations, Left Shift, NumPad, and two-code Space behavior. Chinese candidates must be selected before punctuation.
-- Mocked Lua tests to run in CI; **Windows acceptance pending**.
+- Windows QA preview produced expected `wo...`, `wo+...`, `of,`, and `你們`. GitHub CI includes 101,561 two-letter punctuation mocked-Rime assertions; compatibility across all Windows applications and keyboard layouts is not claimed.
 
 ## v1.0.1 — 2026-11-01
 
